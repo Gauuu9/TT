@@ -41,8 +41,13 @@ import pymysql
 from Courses import ds_course,web_course,android_course,ios_course,uiux_course,resume_videos,interview_videos
 import pafy #for uploading youtube videos
 import plotly.express as px #to create visualisations at the admin session
+
 import nltk
-nltk.download('stopwords')
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords')
+
 
 
 def fetch_yt_video(link):
@@ -396,3 +401,5 @@ def run():
             else:
                 st.error("Wrong ID & Password Provided")
 run()
+
+print(nltk.data.path)

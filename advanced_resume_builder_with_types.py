@@ -1,147 +1,153 @@
 import streamlit as st
 from fpdf import FPDF
+import language_tool_python
 
-# Function to generate a minimalist PDF resume
-def generate_minimalist_pdf(name, email, phone, summary, skills, education, experience, job_type, resume_type):
-    pdf = FPDF()
-    pdf.add_page()
+# Function to generate resume
+def generate_resume(data):
+    resume = f"""
+    # Resume
 
-    # Title
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(200, 10, txt=f"{resume_type} {job_type} Resume", ln=True, align='C')
+    ## {data['full_name']}
+    **Email:** {data['email']}  
+    **Phone:** {data['phone']}  
+    **LinkedIn:** {data['linkedin']}  
 
-    # Name and Contact Info
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt=f"Name: {name}", ln=True, align='L')
-    pdf.cell(200, 10, txt=f"Email: {email}", ln=True, align='L')
-    pdf.cell(200, 10, txt=f"Phone: {phone}", ln=True, align='L')
+    ## Summary
+    {data['summary']}
 
-    # Summary
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(200, 10, txt="Summary:", ln=True, align='L')
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(200, 10, txt=summary)
+    ## Education
+    {data['education']}
 
-    # Skills
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(200, 10, txt="Skills:", ln=True, align='L')
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(200, 10, txt=skills)
+    ## Experience
+    {data['experience']}
 
-    # Education
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(200, 10, txt="Education:", ln=True, align='L')
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(200, 10, txt=education)
+    ## Skills
+    {data['skills']}
+    """
+    return resume
 
-    # Experience
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(200, 10, txt="Experience:", ln=True, align='L')
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(200, 10, txt=experience)
-
-    pdf.output(f"resume_{name}_{resume_type}_minimalist.pdf")
-
-# Function to generate a detailed PDF resume
-def generate_detailed_pdf(name, email, phone, summary, skills, education, experience, job_type, resume_type):
-    pdf = FPDF()
-    pdf.add_page()
-
-    # Title
-    pdf.set_font("Arial", 'B', 20)
-    pdf.cell(200, 10, txt=f"{resume_type} Resume for {job_type}", ln=True, align='C')
-
-    # Contact Info with spacing
-    pdf.set_font("Arial", 'B', 14)
-    pdf.cell(200, 10, txt=f"{name}", ln=True, align='L')
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt=f"Email: {email}", ln=True, align='L')
-    pdf.cell(200, 10, txt=f"Phone: {phone}", ln=True, align='L')
+# Function to generate cover letter
+def generate_cover_letter(data):
+    cover_letter = f"""
+    {data['date']}
     
-    pdf.ln(10)  # Line break for spacing
+    {data['company_name']}  
+    {data['company_address']}  
 
-    # Summary
-    pdf.set_font("Arial", 'B', 14)
-    pdf.cell(200, 10, txt="Summary", ln=True, align='L')
+    Dear Hiring Manager,
+
+    I am writing to express my interest in the {data['job_title']} position at {data['company_name']}. 
+    {data['cover_letter_content']}
+
+    Thank you for considering my application. I look forward to the opportunity to discuss my qualifications further.
+
+    Sincerely,  
+    {data['full_name']}
+    """
+    return cover_letter
+
+# Function to create PDF
+def create_pdf(content):
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
     pdf.set_font("Arial", size=12)
-    pdf.multi_cell(200, 10, txt=summary)
+    
+    for line in content.split('\n'):
+        pdf.multi_cell(0, 10, line)
 
-    # Skills
-    pdf.set_font("Arial", 'B', 14)
-    pdf.cell(200, 10, txt="Skills", ln=True, align='L')
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(200, 10, txt=skills)
+    return pdf.output(dest='S').encode('latin1')
 
-    # Education
-    pdf.set_font("Arial", 'B', 14)
-    pdf.cell(200, 10, txt="Education", ln=True, align='L')
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(200, 10, txt=education)
+# Function to check grammar
+def check_grammar(text):
+    tool = language_tool_python.LanguageTool('en-US')
+    matches = tool.check(text)
+    return matches
 
-    # Experience
-    pdf.set_font("Arial", 'B', 14)
-    pdf.cell(200, 10, txt="Work Experience", ln=True, align='L')
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(200, 10, txt=experience)
+# Streamlit UI
+st.title("Resume and Cover Letter Builder")
 
-    pdf.output(f"resume_{name}_{resume_type}_detailed.pdf")
+# Common input fields
+st.header("Personal Information")
+full_name = st.text_input("Full Name")
+email = st.text_input("Email")
+phone = st.text_input("Phone Number")
+linkedin = st.text_input("LinkedIn Profile URL")
+summary = st.text_area("Summary/Objective")
+education = st.text_area("Education")
+experience = st.text_area("Experience")
+skills = st.text_area("Skills")
 
-# Streamlit code for web app
-def main():
-    st.title("Advanced Resume Builder")
+# Cover Letter specific fields
+st.header("Cover Letter Details")
+date = st.text_input("Date")
+company_name = st.text_input("Company Name")
+company_address = st.text_input("Company Address")
+job_title = st.text_input("Job Title")
+cover_letter_content = st.text_area("Cover Letter Content")
 
-    # Input fields for personal details
-    st.subheader("Personal Details")
-    name = st.text_input("Full Name")
-    email = st.text_input("Email")
-    phone = st.text_input("Phone Number")
+# Check details button
+if st.button("Check Details"):
+    errors = []
+    inputs = {
+        "Full Name": full_name,
+        "Email": email,
+        "Phone": phone,
+        "LinkedIn": linkedin,
+        "Summary": summary,
+        "Education": education,
+        "Experience": experience,
+        "Skills": skills,
+        "Date": date,
+        "Company Name": company_name,
+        "Company Address": company_address,
+        "Job Title": job_title,
+        "Cover Letter Content": cover_letter_content,
+    }
 
-    # Job application type selection
-    st.subheader("Job Application Type")
-    job_type = st.selectbox("Select the type of job you're applying for:", 
-                            ['Software Engineer', 'Data Scientist', 'Product Manager', 'Designer'])
+    for field, text in inputs.items():
+        matches = check_grammar(text)
+        if matches:
+            errors.append(f"{field}: {len(matches)} error(s) found.")
 
-    # Resume type selection
-    st.subheader("Resume Type")
-    resume_type = st.selectbox("Select the resume type:", 
-                               ['Traditional', 'Functional', 'Combination', 'Targeted'])
+    if errors:
+        st.warning("Grammatical errors found:")
+        for error in errors:
+            st.write(error)
+    else:
+        st.success("No grammatical errors found!")
 
-    # Resume format selection
-    st.subheader("Resume Format")
-    resume_format = st.radio("Choose the resume format:", 
-                             ['Minimalist', 'Detailed'])
+# Generate buttons
+if st.button("Generate Resume"):
+    resume = generate_resume({
+        'full_name': full_name,
+        'email': email,
+        'phone': phone,
+        'linkedin': linkedin,
+        'summary': summary,
+        'education': education,
+        'experience': experience,
+        'skills': skills,
+    })
+    st.subheader("Your Resume")
+    st.markdown(resume)
+    
+    # Create PDF
+    pdf_resume = create_pdf(resume)
+    st.download_button("Download Resume as PDF", data=pdf_resume, file_name="resume.pdf")
 
-    # Summary section
-    st.subheader("Summary")
-    summary = st.text_area("Write a brief summary about yourself")
-
-    # Skills section
-    st.subheader("Skills")
-    skills = st.text_area("List your skills (comma separated)")
-
-    # Education section
-    st.subheader("Education")
-    education = st.text_area("Provide details of your education")
-
-    # Experience section
-    st.subheader("Experience")
-    experience = st.text_area("Describe your work experience")
-
-    # Button to generate PDF
-    if st.button("Generate Resume"):
-        if name and email and phone:
-            if resume_format == 'Minimalist':
-                generate_minimalist_pdf(name, email, phone, summary, skills, education, experience, job_type, resume_type)
-                st.success(f"{resume_type} Minimalist Resume generated! Download the PDF below.")
-                with open(f"resume_{name}_{resume_type}_minimalist.pdf", "rb") as f:
-                    st.download_button("Download Minimalist Resume", f, file_name=f"resume_{name}_{resume_type}_minimalist.pdf")
-            elif resume_format == 'Detailed':
-                generate_detailed_pdf(name, email, phone, summary, skills, education, experience, job_type, resume_type)
-                st.success(f"{resume_type} Detailed Resume generated! Download the PDF below.")
-                with open(f"resume_{name}_{resume_type}_detailed.pdf", "rb") as f:
-                    st.download_button("Download Detailed Resume", f, file_name=f"resume_{name}_{resume_type}_detailed.pdf")
-        else:
-            st.error("Please fill in all the required fields.")
-
-if __name__ == '__main__':
-    main()
+if st.button("Generate Cover Letter"):
+    cover_letter = generate_cover_letter({
+        'date': date,
+        'company_name': company_name,
+        'company_address': company_address,
+        'job_title': job_title,
+        'cover_letter_content': cover_letter_content,
+        'full_name': full_name,
+    })
+    st.subheader("Your Cover Letter")
+    st.markdown(cover_letter)
+    
+    # Create PDF
+    pdf_cover_letter = create_pdf(cover_letter)
+    st.download_button("Download Cover Letter as PDF", data=pdf_cover_letter, file_name="cover_letter.pdf")
